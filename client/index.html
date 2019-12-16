@@ -1,18 +1,24 @@
+<canvas id="canvas" width="500" height="500" style="border: 1px solid #000"></canvas>
+
 <script src="/public/socket.io.js"></script>
 <script>
-	let socket = io();
+	let canvas = document.getElementById('canvas');
+	let ctx = canvas.getContext('2d');
+	ctx.font = '30px Arial';
+	let CANCAS_WIDTH = 500;
+	let CANCAS_HEIGHT = 500;
 
-	let test = function() {
-		socket.emit('cuong',{
-			reason : ' test emit socket io'
-		});
-	}
+	let socket = io(); // connedt to socketIO 
 	
-	socket.on ('serverTestMsg',function(data){
-		console.log(data.msg);
+	socket.on ('newPosition',function(data){
+		console.log(data);
+		ctx.clearRect(0,0,CANCAS_WIDTH,CANCAS_HEIGHT);
+		for(let i = 0; i < data.length; i++){
+			ctx.fillText(data[i].number,data[i].x, data[i].y);
+		}
+		
 	});
 
 </script>
-hello world
-<button onclick="test();">test socket emit</button>
+
 

@@ -16,16 +16,41 @@ let server = app.listen(port,function(){ // server start from here
 	console.log(`Example app listening on port ${port}!`)
 });
 let io = require('socket.io')(server);
+let PLAYER_LIST = {};
 
-io.on('connection',function(socket){
-	console.log('socket connection');
+io.on('connection',function(player){
+	console.log('player connection');
 
-	//test
-	socket.on('cuong', function (data){
-		console.log('cuong' + data.reason);
+	player.id = Math.random();
+	player.x = 0;
+	player.y = 0;
+	player.number = '' + Math.floor( Math.random() * 10);
+	PLAYER_LIST[player.id] = player;
+
+	player.on('disconnect',  function () {
+		delete PLAYER_LIST[player.id];
 	});
 
-	socket.emit('serverTestMsg', {
-		msg: 'hello from server'
-	});
 });
+
+setInterval(function() {
+	let pack = [];
+	for (let i in PLAYER_LIST){
+		let player = PLAYER_LIST[i];
+		player.x++;
+		player.y++;
+		pack.push({
+			x: player.x,
+			y: player.y,
+			number : player.number
+		})
+	}
+
+	for(let i in PLAYER_LIST){
+		let player = PLAYER_LIST[i];
+		player.emit('newPosition',pack)  // emit to client
+	}
+
+},1000/25);
+
+
