@@ -1,1 +1,18 @@
+<script src="/public/socket.io.js"></script>
+<script>
+	let socket = io();
+
+	let test = function() {
+		socket.emit('cuong',{
+			reason : ' test emit socket io'
+		});
+	}
+	
+	socket.on ('serverTestMsg',function(data){
+		console.log(data.msg);
+	});
+
+</script>
 hello world
+<button onclick="test();">test socket emit</button>
+
