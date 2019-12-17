@@ -26,16 +26,16 @@ let Entity = function(){
 		spdY: 0,
 		id: ''
 
-	}
+	};
 
 	self.update = function(){
 		self.updatePosition();
-	}
+	};
 
 	self.updatePosition = function(){
 		self.x += self.spdX;
 		self.y += self.spdY;
-	}
+	};
 
 	return self;
 }
@@ -109,6 +109,48 @@ Player.update = function() {
 	return pack;
 }
 
+
+//----------BULLET------------
+let Bullet = function(angle){
+	let self = Entity();
+	self.id = Math.random();
+	self.spdX=Math.cos(angle/180*Math.PI) * 10;
+	self.spdY=Math.sin(angle/180*Math.PI) * 10;
+
+	self.timer  =0;
+	self.toRemove = false;
+
+	let super_update = self.update;
+	self.update = function(){
+		if(self.timer++ > 100){
+			self.toRemove = true;
+		}
+		super_update();
+	}
+
+	Bullet.list[self.id] = self; // create new player automatically
+	return self;
+}
+
+Bullet.list = {};
+
+Bullet.update = function(){
+	if(Math.random() < 0.1) {
+		Bullet(Math.random()* 360);
+	}
+
+	let pack = [];
+	for(let i in Bullet.list) {
+		let bullet = Bullet.list[i];
+		bullet.update();
+		pack.push({
+			x:bullet.x,
+			y:bullet.y
+		});
+	}
+	return pack;
+}
+
 //===== SOCKET IO CONTROLLER ======
 io.on('connection',function(socket){
 	console.log('player connection');
@@ -121,16 +163,15 @@ io.on('connection',function(socket){
 		delete SOCKET_LIST[socket.id];
 		Player.onDisconnect(socket);	
 	});
-
-	
-
 });
-
 
 
 //===== MAIN APP ======
 setInterval(function() {
-	let pack = Player.update();
+	let pack = {
+		player: Player.update(),
+		bullet: Bullet.update(),	
+	}; // get new infomation XY from all players
 	
 	for(let i in SOCKET_LIST){
 		let socket = SOCKET_LIST[i];
