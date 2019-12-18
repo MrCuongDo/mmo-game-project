@@ -1,7 +1,62 @@
-<canvas id="canvas" width="500" height="500" style="border: 1px solid #000"></canvas>
+<div id="signDiv">
+	Username: <input type="text" id="signDiv-username"> <br>
+	Password: <input type="password" id="signDiv-password"> <br>
+	<button id="signDiv-signIn">Sign in</button>
+	<button id="signDiv-signUp">Sign up</button>
+</div>
+<div id="gameDiv" style="display: none;">
+	<canvas id="canvas" width="500" height="500" style="border: 1px solid #000;"></canvas>
+
+	<div id="chat-text" style="width: 500px; height: 200px;overflow-y: scroll; border: solid 1px #000">
+		<div>hello!</div>
+	</div>
+	<form id="chat-form">
+		<input type="text" id="chat-input" style="width: 500px;">	
+	</form>
+</div>
 
 <script src="/public/socket.io.js"></script>
 <script>
+	let socket = io(); // connedt to socketIO 
+	//signing
+	let signDiv = document.getElementById('signDiv');
+	let signDivUsername = document.getElementById('signDiv-username');
+	let signDivPassword = document.getElementById('signDiv-password');
+	let signDivSignIn = document.getElementById('signDiv-signIn');
+	let signDivSignUp = document.getElementById('signDiv-signUp');
+	let gameDiv = document.getElementById('gameDiv');
+	
+
+	signDivSignIn.onclick = function(){
+		socket.emit('signIn', {username: signDivUsername.value, password:signDivPassword.value});
+	}
+
+	socket.on('signInResponse', function(data) {
+		if(data.success) {
+			signDiv.style.display = 'none';
+			gameDiv.style.display = 'inline-block';
+		}else{
+			alert('Sign in unsuccessful!');
+		}
+	})
+
+	signDivSignUp.onclick = function(){
+		socket.emit('signUp', {username: signDivUsername.value, password:signDivPassword.value});
+	}
+
+	socket.on('signUpResponse', function(data) {
+		if(data.success) {
+			alert('Sign up success full');
+		}else {
+			alert('Sign in unsuccessful!');
+		}
+	})
+
+
+	//game 
+	let chatText = document.getElementById('chat-text');
+	let chatInput = document.getElementById('chat-input');
+	let chatForm = document.getElementById('chat-form');
 	let canvas = document.getElementById('canvas');
 	let ctx = canvas.getContext('2d');
 	ctx.font = '30px Arial';
@@ -11,8 +66,6 @@
 	let CANCAS_WIDTH = 500;
 	let CANCAS_HEIGHT = 500;
 
-	let socket = io(); // connedt to socketIO 
-	
 	socket.on ('newPosition',function(data){
 		ctx.clearRect(0,0,CANCAS_WIDTH,CANCAS_HEIGHT);
 		
@@ -27,6 +80,26 @@
 		}
 		
 	});
+
+	socket.on('addToChat', function(data){
+		chatText.innerHTML +=  `<div>${data}</div>`;
+	});
+
+	socket.on('evalMsgToClient', function(data){
+		console.log('evalMsgToClient');
+		console.log(data);
+	});
+
+	chatForm.onsubmit = function(e) {
+		e.preventDefault();
+		if(chatInput.value[0] === '/'){
+			socket.emit('evalMsg',chatInput.value.slice(1));
+		}else{
+			socket.emit('sendMsgToServer',chatInput.value);	
+		}
+		
+		chatInput.value ='';
+	}
 
 	// Keyboard movement
 	document.onkeydown = function(event){
@@ -53,6 +126,19 @@
         	socket.emit('keyPress', {inputId:'up', state:false});
 	}
 
+	document.onmousedown = function(event){
+		socket.emit('keyPress', {inputId:'attack', state:true});
+	}
+	document.onmouseup = function(event){
+		socket.emit('keyPress', {inputId:'attack', state:false});
+	}
+
+	document.onmousemove = function(event){
+		let x = -250 + event.clientX - canvas.getBoundingClientRect().left;
+		let y = -250 + event.clientY - canvas.getBoundingClientRect().top;
+		let angle = Math.atan2(y,x) / Math.PI * 180;
+		socket.emit('keyPress',{inputId:'mouseAngle', state:angle});
+	}
 </script>
 
 
