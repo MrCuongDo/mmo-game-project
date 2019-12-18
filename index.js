@@ -1,4 +1,6 @@
 require('dotenv').config() // use for using of process.env
+let mongojs = require('mongojs');
+let db = mongojs('localhost:27017/myGame',['account','progress']);
 
 const express = require('express');
 const app = express();
@@ -72,30 +74,38 @@ let USERS = {
 	'binh': '123',
 }
 
-// let isValidPassword = async function(data){
-// 	let rs = await setTimeout(function(){
-// 		return USERS[data.username] === data.password;
-// 	},10000);
-// 	console.log(rs);
-// }
-
 let isValidPassword = function(data,callback){
-	setTimeout(function(){
-		callback(USERS[data.username] === data.password) ;
-	},10);
+	db.account.find({username:data.username, password:data.password}, function(err, docs){
+		if(err) {
+			throw new Error(err);			
+		}
+		if(docs.length > 0) {
+			callback(true) ;
+		}else {
+			callback(false) ;
+		}
+	});
 }
 
 let isUsernameTaken = function(data,callback){
-	setTimeout(function(){
-		callback(USERS[data.username]);
-	},10);
-	
+	db.account.find({username:data.username}, function(err, docs){
+		if(err) {
+			throw new Error(err);
+		}
+		if(docs.length > 0) {
+			callback(true) ;
+		}else {
+			callback(false) ;
+		}
+	});
 }
 let addUser = function(data,callback){
-	setTimeout(function(){
-		USERS[data.username] = data.password;
+	db.account.insert({username:data.username, password:data.password}, function(err){
+		if(err) {
+			throw new Error(err);
+		}
 		callback();
-	},10);
+	});;
 }
 
 //-----------PLAYER ------------
