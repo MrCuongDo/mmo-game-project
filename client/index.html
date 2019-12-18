@@ -26,7 +26,6 @@
 	let signDivSignUp = document.getElementById('signDiv-signUp');
 	let gameDiv = document.getElementById('gameDiv');
 	
-
 	signDivSignIn.onclick = function(){
 		socket.emit('signIn', {username: signDivUsername.value, password:signDivPassword.value});
 	}
@@ -52,35 +51,11 @@
 		}
 	})
 
-
-	//game 
+	//chat 
 	let chatText = document.getElementById('chat-text');
 	let chatInput = document.getElementById('chat-input');
 	let chatForm = document.getElementById('chat-form');
-	let canvas = document.getElementById('canvas');
-	let ctx = canvas.getContext('2d');
-	ctx.font = '30px Arial';
-	// ctx.mozImageSmoothingEnabled = false; // better graphic for pixel art
-	// ctx.msImageSmoothingEnabled = false;
-	// ctx.imageSmoothingEnabled = false;
-	let CANCAS_WIDTH = 500;
-	let CANCAS_HEIGHT = 500;
-
-	socket.on ('newPosition',function(data){
-		ctx.clearRect(0,0,CANCAS_WIDTH,CANCAS_HEIGHT);
-		
-		//player
-		for(let i = 0; i < data.player.length; i++){
-			ctx.fillText(data.player[i].number,data.player[i].x, data.player[i].y);
-		}
-
-		//bullet
-		for(let i = 0; i < data.bullet.length; i++){
-			ctx.fillRect(data.bullet[i].x-5, data.bullet[i].y-5,10,10);
-		}
-		
-	});
-
+	
 	socket.on('addToChat', function(data){
 		chatText.innerHTML +=  `<div>${data}</div>`;
 	});
@@ -101,7 +76,113 @@
 		chatInput.value ='';
 	}
 
-	// Keyboard movement
+	//game 
+	let canvas = document.getElementById('canvas');
+	let ctx = canvas.getContext('2d');
+	ctx.font = '30px Arial';
+	// ctx.mozImageSmoothingEnabled = false; // better graphic for pixel art
+	// ctx.msImageSmoothingEnabled = false;
+	// ctx.imageSmoothingEnabled = false;
+	let CANCAS_WIDTH = 500;
+	let CANCAS_HEIGHT = 500;
+
+	// create new player and push to Player.list
+	let  Player = function(initPack){
+		let self = {};
+		self.id = initPack.id;
+		self.number = initPack.number;
+		self.x = initPack.x;
+		self.y = initPack.y;
+		Player.list[self.id] = self;
+		return self;
+	}
+	Player.list = {};
+
+	// create new bullet and push to Bullet.list
+	let  Bullet = function(initPack){
+		let self = {};
+		self.id = initPack.id;
+		self.number = initPack.number;
+		self.x = initPack.x;
+		self.y = initPack.y;
+		Bullet.list[self.id] = self;
+		return self;
+	}
+	Bullet.list = {};
+
+	socket.on('init', function(data){
+		// data : {player: [{id:123, x:0, y:0}], bullet: []}
+		//player
+		for(let i = 0; i < data.player.length; i++){
+			new Player(data.player[i]);
+		}
+
+		//bullet
+		for(let i = 0; i < data.bullet.length; i++){
+			new Bullet(data.bullet[i]);
+		}
+	});
+
+	socket.on('update', function(data){
+		// data : {player: [{id:123, x:0, y:0}], bullet: []}
+		//player
+		for(let i = 0; i < data.player.length; i++){
+			let pack = data.player[i];
+			let p = Player.list[pack.id];
+			if(p){
+				if(p.x !== undefined){
+					p.x = pack.x;
+				}
+
+				if(p.y !== undefined){
+					p.y = pack.y;
+				}
+			}
+		}
+
+		//bullet
+		for(let i = 0; i < data.bullet.length; i++){
+			let pack = data.bullet[i];
+			let b = Bullet.list[pack.id];
+			if(b){
+				if(b.x !== undefined){
+					b.x = pack.x;
+				}
+
+				if(b.y !== undefined){
+					b.y = pack.y;
+				}
+			}
+		}
+	});
+
+	socket.on('remove', function(data){
+		// data : {player: [123123], bullet: [1234,123]} //id to remove
+		//player
+		for(let i = 0; i < data.player.length; i++){
+			delete Player.list[data.player[i]];
+		}
+
+		//bullet
+		for(let i = 0; i < data.bullet.length; i++){
+			delete Bullet.list[data.bullet[i]];
+		}
+	});
+
+	setInterval(function(){
+		ctx.clearRect(0,0,CANCAS_WIDTH,CANCAS_HEIGHT);
+		//player
+		for(let i in Player.list){
+			ctx.fillText(Player.list[i].number,Player.list[i].x, Player.list[i].y);
+		}
+
+		//bullet
+		for(let i in Bullet.list){
+			ctx.fillRect(Bullet.list[i].x-5, Bullet.list[i].y-5,10,10);
+		}
+	},40);
+
+	 // Keyboard movement
 	document.onkeydown = function(event){
         if(event.keyCode === 68)        //d
         	socket.emit('keyPress', {inputId:'right', state:true});
@@ -114,7 +195,6 @@
         // else if (event.keyCode === 80) //p
         // 	pauseGame = !pauseGame;
 	}
-	 
 	document.onkeyup = function(event){
         if(event.keyCode === 68)        //d
         	socket.emit('keyPress', {inputId:'right', state:false});
