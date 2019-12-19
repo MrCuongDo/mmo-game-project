@@ -83,8 +83,26 @@
 	// ctx.mozImageSmoothingEnabled = false; // better graphic for pixel art
 	// ctx.msImageSmoothingEnabled = false;
 	// ctx.imageSmoothingEnabled = false;
-	let CANCAS_WIDTH = 500;
-	let CANCAS_HEIGHT = 500;
+	let CANVAS_WIDTH = 500;
+	let CANVAS_HEIGHT = 500;
+
+	//-----------IMAGE ------------
+	let Img = {};
+	Img.player = new Image();
+	Img.player.src = "/client/image/player.png";
+	// Img.bat = new Image();
+	// Img.bat.src = '/client/img/bat.png';
+	// Img.bee = new Image();
+	// Img.bee.src = '/client/img/bee.png';
+	Img.bullet = new Image();
+	Img.bullet.src = '/client/image/bullet.png';
+	// Img.upgrade1 = new Image();
+	// Img.upgrade1.src = '/client/img/upgrade1.png';
+	// Img.upgrade2 = new Image();
+	// Img.upgrade2.src = '/client/img/upgrade2.png';
+	Img.map = new Image();
+	Img.map.src = '/client/image/map.png';
+
 
 	// create new player and push to Player.list
 	let  Player = function(initPack){
@@ -99,12 +117,24 @@
 		self.score = initPack.score;
 
 		self.draw = function(){
-			let hpWidth = 30 * self.hp/self.hpMax;
-			ctx.fillRect(self.x - hpWidth/2,self.y-40, hpWidth, 4);
+			let x = self.x - Player.list[selfId].x + CANVAS_WIDTH/2;
+			let y = self.y - Player.list[selfId].y + CANVAS_HEIGHT/2;
 
-			ctx.fillText(self.number, self.x, self.y);
+			let hpWidth = 30 * self.hp/self.hpMax;
+			ctx.fillStyle = 'red';
+			ctx.fillRect(x - hpWidth/2,y-40, hpWidth, 4);
+
+			let width = Img.player.width/2 ;
+			let height = Img.player.height/2;
+
 			
-			ctx.fillText(self.score, self.x, self.y-60);
+
+			ctx.drawImage(Img.player,
+				0,0,Img.player.width / 3, Img.player.height/4,
+				x-width/2, y-height/2, width, height
+			);
+			
+			
 		}
 
 		Player.list[self.id] = self;
@@ -121,7 +151,17 @@
 		self.y = initPack.y;
 
 		self.draw = function () {
-			ctx.fillRect(self.x-5, self.y-5,10,10);
+
+			let width = Img.bullet.width / 2;
+			let height = Img.bullet.height / 2;
+
+			let x = self.x - Player.list[selfId].x + CANVAS_WIDTH/2;
+			let y = self.y - Player.list[selfId].y + CANVAS_HEIGHT/2;
+
+			ctx.drawImage(Img.bullet,
+				0,0,Img.bullet.width , Img.bullet.height,
+				x-width/2, y-height/2, width, height
+			);
 		}
 
 		Bullet.list[self.id] = self;
@@ -129,7 +169,10 @@
 	}
 	Bullet.list = {};
 
+	let selfId = null;
 	socket.on('init', function(data){
+		if(data.selfId)
+			selfId = data.selfId;
 		// data : {player: [{id:123, x:0, y:0}], bullet: []}
 		//player
 		for(let i = 0; i < data.player.length; i++){
@@ -196,7 +239,11 @@
 	});
 
 	setInterval(function(){
-		ctx.clearRect(0,0,CANCAS_WIDTH,CANCAS_HEIGHT);
+		if(!selfId)
+			return;
+		ctx.clearRect(0,0,CANVAS_WIDTH,CANVAS_HEIGHT);
+		drawMap();
+		drawScore();
 		//player
 		for(let i in Player.list){
 			Player.list[i].draw();
@@ -206,7 +253,19 @@
 		for(let i in Bullet.list){
 			Bullet.list[i].draw();
 		}
+
+		
 	},40);
+
+	let drawMap = function(){
+		var x = CANVAS_WIDTH / 2 - Player.list[selfId].x;
+		let y = CANVAS_HEIGHT / 2 - Player.list[selfId].y;
+		ctx.drawImage(Img.map,x,y);
+	}
+
+	let drawScore = function(){
+		ctx.fillText(Player.list[selfId].score, 10, 20);
+	}
 
 	 // Keyboard movement
 	document.onkeydown = function(event){

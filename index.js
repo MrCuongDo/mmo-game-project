@@ -69,11 +69,7 @@ let Entity = function () {
 	return self;
 }
 
-let USERS = {
-	'cuong': '123',
-	'binh': '123',
-}
-
+//-----------SIGNING ------------
 let isValidPassword = function (data, callback) {
 	db.account.find({ username: data.username, password: data.password }, function (err, docs) {
 		if (err) {
@@ -108,6 +104,7 @@ let addUser = function (data, callback) {
 	});;
 }
 
+
 //-----------PLAYER ------------
 let Player = function (id) {
 	let self = Entity();
@@ -127,15 +124,17 @@ let Player = function (id) {
 	self.hpMax = 10;
 	self.score =0;
 
+	self.framCounter =0;
+
 	let super_update = self.update;
 	self.update = function () {
+		self.framCounter += 1;
 		self.updateSpd();
 		super_update();
 
 		if (self.pressingAttack) {
-			for (let i = -3; i < 3; i++) {
-				self.shootBullet(i * 10 + self.mouseAngle);
-			}
+			// if(self.framCounter % 40 === 0)
+				self.shootBullet(self.mouseAngle);
 		}
 	}
 
@@ -217,6 +216,7 @@ Player.onConnect = function (socket) {
 	}
 
 	socket.emit('init', {
+		selfId: socket.id,
 		player: Player.getAllInitPack(),
 		bullet: Bullet.getAllInitPack()
 	})
