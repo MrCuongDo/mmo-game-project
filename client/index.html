@@ -5,9 +5,10 @@
 	<button id="signDiv-signUp">Sign up</button>
 </div>
 <div id="gameDiv" style="display: none;">
-	<canvas id="canvas" width="500" height="500" style="border: 1px solid #000;"></canvas>
+	<canvas id="canvas" width="500" height="500" style="position: absolute ;border: 1px solid #000;"></canvas>
+	<canvas id="canvas-ui" width="500" height="500" style="position: absolute ;border: 1px solid #000;"></canvas>
 
-	<div id="chat-text" style="width: 500px; height: 200px;overflow-y: scroll; border: solid 1px #000">
+	<div id="chat-text" style="margin-top: 500px;width: 500px; height: 200px;overflow-y: scroll; border: solid 1px #000">
 		<div>hello!</div>
 	</div>
 	<form id="chat-form">
@@ -78,8 +79,10 @@
 
 	//game 
 	let canvas = document.getElementById('canvas');
+	let canvasUi = document.getElementById('canvas-ui');
 	let ctx = canvas.getContext('2d');
-	ctx.font = '30px Arial';
+	let ctxUi = canvasUi.getContext('2d');
+	ctxUi.font = '30px Arial';
 	// ctx.mozImageSmoothingEnabled = false; // better graphic for pixel art
 	// ctx.msImageSmoothingEnabled = false;
 	// ctx.imageSmoothingEnabled = false;
@@ -274,8 +277,13 @@
 		ctx.drawImage(Img.map[player.map],x,y);
 	}
 
+	let lastScore = null;
 	let drawScore = function(){
-		ctx.fillText(Player.list[selfId].score, 10, 20);
+		if(lastScore === Player.list[selfId].score)
+			return;
+		lastScore =Player.list[selfId].score ;
+		ctxUi.clearRect(0,0,CANVAS_WIDTH,CANVAS_HEIGHT)	
+		ctxUi.fillText(Player.list[selfId].score, 10, 20);
 	}
 
 	 // Keyboard movement
