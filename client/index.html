@@ -100,8 +100,11 @@
 	// Img.upgrade1.src = '/client/img/upgrade1.png';
 	// Img.upgrade2 = new Image();
 	// Img.upgrade2.src = '/client/img/upgrade2.png';
-	Img.map = new Image();
-	Img.map.src = '/client/image/map.png';
+	Img.map  = {}
+	Img.map['field'] = new Image();
+	Img.map['field'].src = '/client/image/map.png';
+	Img.map['forest'] = new Image();
+	Img.map['forest'].src = '/client/image/map2.png';
 
 
 	// create new player and push to Player.list
@@ -115,8 +118,12 @@
 		self.hp = initPack.hp;
 		self.hpMax = initPack.hpMax;
 		self.score = initPack.score;
+		self.map = initPack.map;
 
 		self.draw = function(){
+			if(Player.list[selfId].map != self.map) // if player and player are not the same map then dont draw player
+				return;
+
 			let x = self.x - Player.list[selfId].x + CANVAS_WIDTH/2;
 			let y = self.y - Player.list[selfId].y + CANVAS_HEIGHT/2;
 
@@ -149,9 +156,11 @@
 		self.number = initPack.number;
 		self.x = initPack.x;
 		self.y = initPack.y;
+		self.map = initPack.map;
 
 		self.draw = function () {
-
+			if(Player.list[selfId].map != self.map) // if player and bullet not same map then dont draw bullet
+				return;
 			let width = Img.bullet.width / 2;
 			let height = Img.bullet.height / 2;
 
@@ -258,9 +267,11 @@
 	},40);
 
 	let drawMap = function(){
-		var x = CANVAS_WIDTH / 2 - Player.list[selfId].x;
-		let y = CANVAS_HEIGHT / 2 - Player.list[selfId].y;
-		ctx.drawImage(Img.map,x,y);
+		let player = Player.list[selfId];
+	
+		let x = CANVAS_WIDTH / 2 - player.x;
+		let y = CANVAS_HEIGHT / 2 - player.y;
+		ctx.drawImage(Img.map[player.map],x,y);
 	}
 
 	let drawScore = function(){

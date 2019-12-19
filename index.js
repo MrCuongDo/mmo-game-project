@@ -24,15 +24,27 @@ let server = app.listen(port, function () { // server start from here
 let io = require('socket.io')(server);
 let SOCKET_LIST = {};
 
-let Entity = function () {
+let Entity = function (param) {
 	let self = {
 		x: 250,
 		y: 250,
 		spdX: 0,
 		spdY: 0,
-		id: ''
+		id: '',
+		map:'forest',
 
 	};
+
+	if(param) {
+		if(param.x)
+			self.x = param.x;
+		if(param.y)
+			self.y = param.y;
+		if(param.map)
+			self.map = param.map;
+		if(param.id)
+			self.id = param.id;
+	}
 
 	self.update = function () {
 		self.updatePosition();
@@ -106,9 +118,8 @@ let addUser = function (data, callback) {
 
 
 //-----------PLAYER ------------
-let Player = function (id) {
-	let self = Entity();
-	self.id = id;
+let Player = function (param) {
+	let self = Entity(param);
 	self.number = '' + Math.floor(10 * Math.random());
 
 	self.maxMoveSpd = 10;
@@ -133,15 +144,19 @@ let Player = function (id) {
 		super_update();
 
 		if (self.pressingAttack) {
-			// if(self.framCounter % 40 === 0)
+			if(self.framCounter % 40 === 0)
 				self.shootBullet(self.mouseAngle);
 		}
 	}
 
-	self.shootBullet = function (angel) {
-		let b = Bullet(self.id, angel);
-		b.x = self.x;
-		b.y = self.y;
+	self.shootBullet = function (angle) {
+		Bullet({
+			parent: self.id,
+			angle: angle,
+			x: self.x,
+			y: self.y,
+			map: self.map,
+		});
 	}
 
 	self.updateSpd = function () {
@@ -171,6 +186,7 @@ let Player = function (id) {
 			hp:self.hp,
 			hpMax:self.hpMax,
 			score:self.score,
+			map: self.map,
 		};
 	}
 
@@ -184,7 +200,7 @@ let Player = function (id) {
 		};
 	}
 
-	Player.list[id] = self; // create new player automatically
+	Player.list[self.id] = self; // create new player automatically
 
 	initPack.player.push(self.getInitPack());
 	return self;
@@ -193,7 +209,14 @@ let Player = function (id) {
 Player.list = {};
 
 Player.onConnect = function (socket) {
-	let player = Player(socket.id);
+	let mapName = 'forest';
+	if(Math.random() < 0.5){
+		mapName = 'field';
+	}
+	let player = Player({
+		id: socket.id,
+		map: mapName,
+	});
 	socket.on('keyPress', function (data) {
 		if (data.inputId === 'left')
 			player.pressingLeft = data.state;
@@ -246,12 +269,14 @@ Player.update = function () {
 }
 
 //----------BULLET------------
-let Bullet = function (parent, angle) {
-	let self = Entity();
+let Bullet = function (param) {
+	let self = Entity(param);
 	self.id = Math.random();
-	self.spdX = Math.cos(angle / 180 * Math.PI) * 10;
-	self.spdY = Math.sin(angle / 180 * Math.PI) * 10;
-	self.parent = parent;
+	self.spd = 30;
+	self.angle = param.angle;
+	self.spdX = Math.cos(param.angle / 180 * Math.PI) * self.spd;
+	self.spdY = Math.sin(param.angle / 180 * Math.PI) * self.spd;
+	self.parent = param.parent;
 	self.timer = 0;
 	self.toRemove = false;
 
@@ -264,7 +289,7 @@ let Bullet = function (parent, angle) {
 
 		for (let i in Player.list) {
 			let p = Player.list[i];
-			if (self.getDistance(p) < 32 && self.parent !== p.id) {
+			if (self.map === p.map && self.getDistance(p) < 32 && self.parent !== p.id) {
 				p.hp -= 1;
 				
 				if(p.hp <= 0) {
@@ -288,7 +313,7 @@ let Bullet = function (parent, angle) {
 			id: self.id,
 			x: self.x,
 			y: self.y,
-			number: self.number,
+			map: self.map,
 		};
 	}
 
