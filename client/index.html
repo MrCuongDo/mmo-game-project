@@ -89,10 +89,24 @@
 	// create new player and push to Player.list
 	let  Player = function(initPack){
 		let self = {};
+
 		self.id = initPack.id;
 		self.number = initPack.number;
 		self.x = initPack.x;
 		self.y = initPack.y;
+		self.hp = initPack.hp;
+		self.hpMax = initPack.hpMax;
+		self.score = initPack.score;
+
+		self.draw = function(){
+			let hpWidth = 30 * self.hp/self.hpMax;
+			ctx.fillRect(self.x - hpWidth/2,self.y-40, hpWidth, 4);
+
+			ctx.fillText(self.number, self.x, self.y);
+			
+			ctx.fillText(self.score, self.x, self.y-60);
+		}
+
 		Player.list[self.id] = self;
 		return self;
 	}
@@ -105,6 +119,11 @@
 		self.number = initPack.number;
 		self.x = initPack.x;
 		self.y = initPack.y;
+
+		self.draw = function () {
+			ctx.fillRect(self.x-5, self.y-5,10,10);
+		}
+
 		Bullet.list[self.id] = self;
 		return self;
 	}
@@ -136,6 +155,13 @@
 
 				if(p.y !== undefined){
 					p.y = pack.y;
+				}
+				if(p.hp !== undefined){
+					p.hp = pack.hp;
+				}
+
+				if(p.score !== undefined){
+					p.score = pack.score;
 				}
 			}
 		}
@@ -173,12 +199,12 @@
 		ctx.clearRect(0,0,CANCAS_WIDTH,CANCAS_HEIGHT);
 		//player
 		for(let i in Player.list){
-			ctx.fillText(Player.list[i].number,Player.list[i].x, Player.list[i].y);
+			Player.list[i].draw();
 		}
 
 		//bullet
 		for(let i in Bullet.list){
-			ctx.fillRect(Bullet.list[i].x-5, Bullet.list[i].y-5,10,10);
+			Bullet.list[i].draw();
 		}
 	},40);
 
@@ -214,8 +240,8 @@
 	}
 
 	document.onmousemove = function(event){
-		let x = -250 + event.clientX - canvas.getBoundingClientRect().left;
-		let y = -250 + event.clientY - canvas.getBoundingClientRect().top;
+		let x = -250 + event.clientX -8 ; //- canvas.getBoundingClientRect().left;
+		let y = -250 + event.clientY -8; //- canvas.getBoundingClientRect().top;
 		let angle = Math.atan2(y,x) / Math.PI * 180;
 		socket.emit('keyPress',{inputId:'mouseAngle', state:angle});
 	}
