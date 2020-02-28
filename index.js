@@ -144,7 +144,7 @@ let Player = function (param) {
 		super_update();
 
 		if (self.pressingAttack) {
-			if(self.framCounter % 40 === 0)
+			// if(self.framCounter % 20 === 0)
 				self.shootBullet(self.mouseAngle);
 		}
 	}
@@ -197,6 +197,7 @@ let Player = function (param) {
 			y: self.y,
 			hp: self.hp,
 			score: self.score,
+			map: self.map,
 		};
 	}
 
@@ -232,6 +233,14 @@ Player.onConnect = function (socket) {
 			player.mouseAngle = data.state;
 
 	});
+
+	socket.on('changeMap', function(){
+		if(player.map === 'forest') {		
+			player.map = 'field';
+		}else {
+			player.map = 'forest';
+		}
+	})
 
 	let tempBullets = [];
 	for (let i in Bullet.list){
@@ -272,10 +281,9 @@ Player.update = function () {
 let Bullet = function (param) {
 	let self = Entity(param);
 	self.id = Math.random();
-	self.spd = 30;
 	self.angle = param.angle;
-	self.spdX = Math.cos(param.angle / 180 * Math.PI) * self.spd;
-	self.spdY = Math.sin(param.angle / 180 * Math.PI) * self.spd;
+	self.spdX = Math.cos(param.angle / 180 * Math.PI) * 10;
+	self.spdY = Math.sin(param.angle / 180 * Math.PI) * 10;
 	self.parent = param.parent;
 	self.timer = 0;
 	self.toRemove = false;

@@ -5,15 +5,23 @@
 	<button id="signDiv-signUp">Sign up</button>
 </div>
 <div id="gameDiv" style="display: none;">
-	<canvas id="canvas" width="500" height="500" style="position: absolute ;border: 1px solid #000;"></canvas>
-	<canvas id="canvas-ui" width="500" height="500" style="position: absolute ;border: 1px solid #000;"></canvas>
-
-	<div id="chat-text" style="margin-top: 500px;width: 500px; height: 200px;overflow-y: scroll; border: solid 1px #000">
-		<div>hello!</div>
+	<div id="game" style="position: absolute;width:500px; height:500px;">
+		<canvas id="canvas" width="500" height="500" style="position: absolute ;border: 1px solid #000;"></canvas>
+		<canvas id="canvas-ui" width="500" height="500" style="position: absolute ;border: 1px solid #000;"></canvas>
+		
+		<div id="ui" style="position: absolute; width: 500px; height: 500px;">
+			<button onclick="changeMap();" style="position: absolute; bottom: 0px;left: 0px;">Change map</button>
+		</div>
 	</div>
-	<form id="chat-form">
-		<input type="text" id="chat-input" style="width: 500px;">	
-	</form>
+
+	<div id="belowGame">
+		<div id="chat-text" style="margin-top: 500px;width: 500px; height: 200px;overflow-y: scroll; border: solid 1px #000">
+			<div>hello!</div>
+		</div>
+		<form id="chat-form">
+			<input type="text" id="chat-input" style="width: 500px;">	
+		</form>
+	</div>
 </div>
 
 <script src="/public/socket.io.js"></script>
@@ -75,6 +83,12 @@
 		}
 		
 		chatInput.value ='';
+	}
+
+	//ui
+	let changeMap = function() {
+		console.log('change map');
+		socket.emit('changeMap');
 	}
 
 	//game 
@@ -218,6 +232,9 @@
 				if(p.score !== undefined){
 					p.score = pack.score;
 				}
+				if(p.map !== undefined){
+					p.map = pack.map;
+				}
 			}
 		}
 
@@ -265,9 +282,7 @@
 		for(let i in Bullet.list){
 			Bullet.list[i].draw();
 		}
-
-		
-	},40);
+	},30);
 
 	let drawMap = function(){
 		let player = Player.list[selfId];
